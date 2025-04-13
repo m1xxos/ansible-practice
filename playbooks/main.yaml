@@ -1,0 +1,7 @@
+- name: DB setup
+  hosts: all
+  become: true
+  tasks:
+    - name: DB setup role
+      ansible.builtin.include_role:
+        name: db-setup
