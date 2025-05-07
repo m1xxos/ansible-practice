@@ -1,0 +1,35 @@
+! Configuration File for keepalived
+
+global_defs {
+   router_id {{ keepalived_router_id }}
+   script_user root
+   enable_script_security
+}
+
+vrrp_script check_traefik {
+   script "/usr/local/bin/check_traefik.sh"
+   interval 2
+   weight 2
+}
+
+{% for node in keepalived_nodes %}
+{% if node.host == inventory_hostname %}
+vrrp_instance VI_1 {
+   state {{ node.state }}
+   interface {{ keepalived_interface }}
+   virtual_router_id {{ node.id }}
+   priority {{ node.priority }}
+   advert_int 1
+   authentication {
+      auth_type PASS
+      auth_pass {{ keepalived_password }}
+   }
+   virtual_ipaddress {
+      {{ keepalived_virtual_ip }}/24
+   }
+   track_script {
+      check_traefik
+   }
+}
+{% endif %}
+{% endfor %}

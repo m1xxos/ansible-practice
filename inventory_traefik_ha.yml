@@ -1,0 +1,20 @@
+---
+# Inventory файл в формате YAML для Traefik с Keepalived в режиме HA
+
+all:
+  vars:
+    ansible_user: vagrant
+    ansible_password: vagrant
+  children:
+    traefik_servers:
+      hosts:
+        traefik01.example.com:
+          ansible_host: 172.16.217.146
+          keepalived_priority: 100
+          keepalived_state: MASTER
+          keepalived_id: 1
+        traefik02.example.com:
+          ansible_host: 172.16.217.147
+          keepalived_priority: 90
+          keepalived_state: BACKUP
+          keepalived_id: 2

@@ -1,0 +1,33 @@
+## Traefik Static Configuration
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: "{{ traefik_log_level }}"
+  format: json
+
+api:
+  dashboard: {{ traefik_api_dashboard | lower }}
+  insecure: {{ traefik_api_insecure | lower }}
+
+entryPoints:
+  web:
+    address: ":{{ traefik_http_port }}"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+
+  websecure:
+    address: ":{{ traefik_https_port }}"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: "{{ traefik_network_name }}"
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true

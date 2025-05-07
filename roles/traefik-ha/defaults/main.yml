@@ -1,0 +1,38 @@
+---
+# Default variables for traefik-ha role
+
+# Traefik configuration
+traefik_version: "v2.10"
+traefik_config_dir: "/opt/traefik"
+traefik_log_level: "INFO"
+traefik_api_dashboard: true
+traefik_api_insecure: false
+traefik_domain: "example.com"
+
+# Docker network configuration
+traefik_network_name: "traefik-net"
+
+# HTTP/HTTPS ports
+traefik_http_port: 80
+traefik_https_port: 443
+
+# Keepalived configuration
+keepalived_virtual_ip: "192.168.1.100"
+keepalived_interface: "eth0"
+keepalived_router_id: "51"
+keepalived_password: "d0ck3r"
+
+# Node configuration
+# The first node in the list will be the primary (master) node
+keepalived_nodes:
+  - name: "{{ inventory_hostname }}"
+    priority: 100
+    state: "MASTER"
+    id: 1
+  - name: "node2.example.com"
+    priority: 90
+    state: "BACKUP"
+    id: 2
+
+# Debug mode
+traefik_debug: false

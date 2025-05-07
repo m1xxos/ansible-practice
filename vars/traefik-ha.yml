@@ -1,0 +1,48 @@
+---
+# Variable file for Traefik with Keepalived high availability deployment
+
+# Traefik configuration
+traefik_version: "v2.10"
+traefik_config_dir: "/opt/traefik"
+traefik_log_level: "INFO"
+traefik_api_dashboard: true
+traefik_api_insecure: false # Set to true only for testing
+traefik_domain: "example.com"
+
+# Network configuration
+traefik_network_name: "traefik-net"
+traefik_http_port: 80
+traefik_https_port: 443
+
+# Dashboard authentication
+traefik_dashboard_auth:
+  username: admin
+  # Password hash for "admin" (change this in production!)
+password_hash: "$2y$05$3eVHs726xXI72U9bQoABZOyBZ2JlaRXJLVBIaSqjEvdZLUECrKrse"
+
+# Сетевые параметры
+keepalived_virtual_ip: "172.16.217.150"
+keepalived_interface: "eth0"
+keepalived_router_id: "51"
+keepalived_auth_pass: "SecureKeepalivePwd123!"
+
+# Динамическая конфигурация Traefik
+# Пример настройки роутеров и сервисов
+traefik_dynamic_config:
+  http:
+    routers:
+      app:
+        rule: "Host(`app.test.local`)"
+        service: "app-service"
+        entryPoints:
+        - "websecure"
+        middlewares:
+        - "secure-headers"
+        tls:
+          certResolver: "letsencrypt"
+
+    services:
+      app-service:
+        loadBalancer:
+          servers:
+          - url: "http://app-server:3000"

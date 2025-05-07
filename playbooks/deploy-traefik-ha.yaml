@@ -1,0 +1,65 @@
+---
+# Deploy Traefik with Keepalived high availability
+
+- name: Deploy Traefik with HA using Keepalived
+  hosts: traefik_servers
+  become: true
+  vars_files:
+    - ../vars/traefik-ha.yml
+
+  pre_tasks:
+    - name: Check if required variables are defined
+      ansible.builtin.fail:
+        msg: "Required variable '{{ item }}' is not defined"
+      when: item is not defined
+      loop:
+        - network_interface
+
+    - name: Ensure kernel IP forwarding is enabled
+      ansible.builtin.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        state: present
+        reload: true
+      
+    - name: Create keepalived node configuration
+      ansible.builtin.set_fact:
+        keepalived_nodes: []
+        
+    - name: Add current host to keepalived nodes
+      ansible.builtin.set_fact:
+        keepalived_nodes: >
+          {{ keepalived_nodes + [{
+            'host': inventory_hostname,
+            'priority': hostvars[inventory_hostname]['keepalived_priority'],
+            'state': hostvars[inventory_hostname]['keepalived_state'],
+            'id': hostvars[inventory_hostname]['keepalived_id']
+          }] }}
+      loop: "{{ groups['traefik_servers'] }}"
+      loop_control:
+        loop_var: inventory_hostname
+      run_once: true
+
+  roles:
+    - role: traefik-ha
+
+  post_tasks:
+    - name: Verify Traefik is running
+      ansible.builtin.command: docker ps | grep traefik
+      register: traefik_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: Show Traefik status
+      ansible.builtin.debug:
+        msg: "Traefik is {{ 'running' if traefik_status.rc == 0 else 'not running' }}"
+
+    - name: Verify Keepalived is running
+      ansible.builtin.command: systemctl status keepalived
+      register: keepalived_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: Show Keepalived status
+      ansible.builtin.debug:
+        msg: "Keepalived is {{ 'running' if keepalived_status.rc == 0 else 'not running' }}"

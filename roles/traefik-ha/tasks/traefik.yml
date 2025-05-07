@@ -1,0 +1,46 @@
+---
+# Traefik installation and configuration tasks for traefik-ha role
+
+- name: Create traefik directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ traefik_config_dir }}"
+    - "{{ traefik_config_dir }}/dynamic"
+    - "{{ traefik_config_dir }}/acme"
+
+- name: Create traefik static configuration
+  ansible.builtin.template:
+    src: traefik.yml.j2
+    dest: "{{ traefik_config_dir }}/traefik.yml"
+    mode: '0644'
+  notify: Restart traefik
+
+- name: Create traefik dynamic configuration
+  ansible.builtin.template:
+    src: dynamic-config.yml.j2
+    dest: "{{ traefik_config_dir }}/dynamic/config.yml"
+    mode: '0644'
+  notify: Restart traefik
+
+- name: Create traefik docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ traefik_config_dir }}/docker-compose.yml"
+    mode: '0644'
+  notify: Restart traefik
+
+- name: Deploy traefik using docker-compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_config_dir }}"
+    files:
+      - docker-compose.yml
+    state: present
+  register: traefik_deploy_result
+
+- name: Show traefik deployment result
+  ansible.builtin.debug:
+    var: traefik_deploy_result
+  when: traefik_debug | default(false)

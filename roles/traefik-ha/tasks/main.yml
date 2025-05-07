@@ -1,0 +1,9 @@
+---
+# Main tasks file for traefik-ha role
+
+
+- name: Include keepalived setup tasks
+  ansible.builtin.import_tasks: keepalived.yml
+
+- name: Include traefik setup tasks
+  ansible.builtin.import_tasks: traefik.yml

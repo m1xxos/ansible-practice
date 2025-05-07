@@ -1,0 +1,32 @@
+---
+# Keepalived installation and configuration tasks for traefik-ha role
+
+- name: Install keepalived
+  ansible.builtin.package:
+    name: keepalived
+    state: present
+
+- name: Create keepalived configuration directory
+  ansible.builtin.file:
+    path: /etc/keepalived
+    state: directory
+    mode: '0755'
+
+- name: Configure keepalived
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: '0644'
+  notify: Restart keepalived
+
+- name: Create check script for traefik
+  ansible.builtin.template:
+    src: check_traefik.sh.j2
+    dest: /usr/local/bin/check_traefik.sh
+    mode: '0755'
+
+- name: Start and enable keepalived service
+  ansible.builtin.service:
+    name: keepalived
+    state: started
+    enabled: true

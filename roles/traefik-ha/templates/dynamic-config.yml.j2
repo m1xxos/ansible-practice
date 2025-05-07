@@ -1,0 +1,16 @@
+## Traefik Dynamic Configuration
+
+# HTTP middleware definitions
+http:
+  middlewares:
+    secure-headers:
+      headers:
+        sslRedirect: true
+        stsIncludeSubdomains: false
+        stsPreload: true
+        stsSeconds: 31536000
+      
+{% if traefik_dynamic_config is defined %}
+# Custom dynamic configuration
+{{ traefik_dynamic_config | to_nice_yaml(indent=2) }}
+{% endif %}
